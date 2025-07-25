@@ -31,7 +31,7 @@
 ```text
 MIT License
 
-Copyright (c) 2025 [TTHILLTT]
+Copyright (c) 2025 [考锡琪]
 
 Permission is hereby granted...
 ```
@@ -51,9 +51,16 @@ pip install requests openpyxl
 4. 刷新页面，复制任意请求中的：
    - `__client_id`
    - `_uid`
-(如果你用过VJudge，你应该知道怎么做)
+   - (如果你用过VJudge，你应该知道怎么做)
 ## 联系作者
 
 有疑问或建议？欢迎联系：
 📧 Email: kaoxiqi@qq.com
 💬 WeChat: kaoxiqi
+
+# 自检
+### 如果你发现了这个神仙程序，但是你
+### - 运行不起来
+### - 运行后报错
+### 请先检查是不是您自己的问题再来联系我
+# TTHILLTT基于Python 3.10.6开发，不能保证全部的环境都能使用，如遇问题请附上自己的Python版本，报错信息，系统详细版本号，打开方式等等任何你认为需要的信息!!!然后发送[Issues](https://github.com/TTHILLTT/LuoguBus/issues/new/choose)!!!
