@@ -173,7 +173,22 @@ def create_csv(records, filename):
 
 
 def main():
-    print("洛谷做题日记生成器 v3.1")
+    banner = f"""
+                ██╗     ██╗   ██╗ ██████╗  ██████╗ ██╗   ██╗
+                ██║     ██║   ██║██╔════╝ ██╔═══██╗██║   ██║
+                ██║     ██║   ██║██║  ███╗██║   ██║██║   ██║
+                ██║     ██║   ██║██║   ██║██║   ██║██║   ██║  
+                ███████╗╚██████╔╝╚██████╔╝╚██████╔╝╚██████╔╝
+                ╚══════╝ ╚═════╝  ╚═════╝  ╚═════╝  ╚═════╝
+                ██████╗ ██╗   ██╗███████╗
+                ██╔══██╗██║   ██║██╔════╝
+                ██████╔╝██║   ██║███████╗
+                ██╔══██╗██║   ██║╚════██║
+                ██████╔╝╚██████╔╝███████║
+                ╚═════╝  ╚═════╝ ╚══════╝
+            """
+    print(banner)
+    print("洛谷做题日记生成器 v3.2")
     print("=" * 60)
     print("将同时生成.xlsx和.csv文件，按提交时间升序排列")
     print("=" * 60)
@@ -220,7 +235,10 @@ if __name__ == "__main__":
     try:
         import openpyxl
     except ImportError:
-        print("错误: 需要安装openpyxl库，请执行: pip install openpyxl")
+        print("Error:你需要安装openpyxl库，请执行: pip install openpyxl")
         sys.exit(1)
-
+    try:
+        import requests
+    except ImportError:
+        print("Error:你需要安装requests库，请执行:pip install requests")
     main()
