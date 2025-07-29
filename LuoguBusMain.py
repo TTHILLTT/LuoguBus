@@ -75,7 +75,7 @@ def fetch_luogu_submissions(luogu_uid, client_id, count=50):
 
 
 def create_excel(records, filename):
-    """创建美观的Excel文件"""
+    """创建美观的Excel文件，状态颜色与洛谷官网一致"""
     wb = Workbook()
     ws = wb.active
     ws.title = "刷题记录"
@@ -110,15 +110,30 @@ def create_excel(records, filename):
 
     # 数据样式
     data_alignment = Alignment(horizontal="left", vertical="center", wrap_text=True)
+
     status_colors = {
-        "AC": "00B050",  # 绿色
-        "WA": "FF0000",  # 红色
-        "TLE": "FFC000",  # 橙色
-        "MLE": "7030A0",  # 紫色
-        "RE": "FF0000",  # 红色
-        "CE": "000000",  # 黑色
-        "Half AC": "00CED1",  # 青色
-        "UKE": "000000"  # 黑色
+        "AC": "52C41A",
+        "WA": "E74C3C",
+        "TLE": "F39C11",
+        "MLE": "9B59B6",
+        "RE": "A71D5D",
+        "CE": "000000",
+        "UnAccept": "1ABC9C",
+        "UKE": "ADADAD"
+    }
+
+    status_mapping = {
+        12: "AC",
+        7: "WA",
+        4: "TLE",
+        5: "MLE",
+        6: "RE",
+        2: "CE",
+        14: "UnAccept",
+        11: "UKE",
+        21: "Waiting",
+        3: "OLE",
+        1: "Judging"
     }
 
     # 写入数据
@@ -126,12 +141,9 @@ def create_excel(records, filename):
         submit_time = datetime.fromtimestamp(record['submitTime'])
         problem = record.get('problem', {})
 
-        # 状态处理（包含UKE状态）
-        status = {
-            12: "AC", 7: "WA", 4: "TLE",
-            5: "MLE", 6: "RE", 2: "CE",
-            14: "Half AC", 11: "UKE"
-        }.get(record['status'], f"未知({record['status']})")
+        # 状态处理 - 使用修正后的状态映射
+        status_code = record.get('status', 0)
+        status = status_mapping.get(status_code, f"未知({status_code})")
 
         row = [
             submit_time.strftime("%Y-%m-%d %H:%M"),
@@ -150,15 +162,15 @@ def create_excel(records, filename):
             cell.alignment = data_alignment
             cell.border = thin_border
 
-            # 状态列着色（第4列）
+            # 状态列着色（第4列） - 使用洛谷官网颜色
             if col == 4 and status in status_colors:
                 cell.fill = PatternFill(
                     start_color=status_colors[status],
                     end_color=status_colors[status],
                     fill_type="solid"
                 )
-                # 深色背景使用白色字体
-                cell.font = Font(color="FFFFFF" if status in ["WA", "RE", "CE", "UKE"] else "000000")
+                # 所有状态使用白色字体（与洛谷官网一致）
+                cell.font = Font(color="FFFFFF")
 
     # 冻结首行
     ws.freeze_panes = "A2"
@@ -178,17 +190,30 @@ def create_csv(records, filename):
         "submit_time", "problem_id", "problem_name", "status", "run_time", "memory_usage"
     ]
 
+    # 状态映射（与Excel一致）
+    status_mapping = {
+        12: "AC",
+        7: "WA",
+        4: "TLE",
+        5: "MLE",
+        6: "RE",
+        2: "CE",
+        14: "UnAccept",
+        11: "UKE",
+        21: "Waiting",
+        3: "OLE",
+        1: "Judging"
+    }
+
     # 准备数据
     data = []
     for record in records:
         submit_time = datetime.fromtimestamp(record['submitTime'])
         problem = record.get('problem', {})
 
-        status = {
-            12: "AC", 7: "WA", 4: "TLE",
-            5: "MLE", 6: "RE", 2: "CE",
-            14: "Half AC", 11: "UKE"
-        }.get(record['status'], f"Unknown({record['status']})")
+        # 使用修正后的状态映射
+        status_code = record.get('status', 0)
+        status = status_mapping.get(status_code, f"Unknown({status_code})")
 
         data.append({
             "submit_time": submit_time.strftime("%Y-%m-%d %H:%M:%S"),
@@ -224,11 +249,7 @@ def main():
                 ╚═════╝  ╚═════╝ ╚══════╝
             """
     print(banner)
-    print("洛谷做题日记生成器 v3.8")
-    print("=" * 60)
-    print("优化记录获取逻辑：确保获取最新提交并按时间升序排列")
-    print("支持多页抓取，最多可获取1000条提交记录（避免频繁请求被Ban）")
-    print("=" * 60)
+    print("洛谷做题日记生成器 v3.9")
 
     # 获取必要信息
     client_id = input("请输入__client_id的值: ").strip()
@@ -285,8 +306,8 @@ def main():
     # 使用提示
     print("\n使用说明:")
     print(f"1. Excel文件 ({base_filename}.xlsx):")
+    print("   - 状态颜色与洛谷官网完全一致")
     print("   - 表格按提交时间升序排列（最早的在最上面）")
-    print("   - 美观的格式化表格，状态自动着色")
     print(f"2. CSV文件 ({base_filename}.csv):")
     print("   - 纯文本格式，适合程序处理")
     print(f"3. 包含 {actual_count} 条记录，时间从 {first_submit} 到 {last_submit}")
