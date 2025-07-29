@@ -9,7 +9,7 @@ from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
 
 
 def fetch_luogu_submissions(luogu_uid, client_id, count=50):
-    """获取洛谷提交记录（按时间升序排列），支持多页抓取"""
+    """获取洛谷提交记录，确保获取最新记录并按时间升序排列"""
     url = "https://www.luogu.com.cn/record/list"
 
     headers = {
@@ -23,12 +23,14 @@ def fetch_luogu_submissions(luogu_uid, client_id, count=50):
     all_records = []
     page = 1
     per_page = 20  # 洛谷每页固定返回20条记录
+    total_needed = count
 
     try:
         # 计算需要抓取的页数（向上取整）
-        pages_needed = (count + per_page - 1) // per_page
+        pages_needed = (total_needed + per_page - 1) // per_page
 
-        for page in range(1, pages_needed + 1):
+        # 从第一页开始获取最新记录
+        while len(all_records) < total_needed and page <= pages_needed:
             params = {
                 "user": luogu_uid,
                 "page": page,
@@ -48,23 +50,25 @@ def fetch_luogu_submissions(luogu_uid, client_id, count=50):
             if not records:
                 break  # 没有更多记录了
 
+            # 将本页记录按时间升序排列后添加到总列表
+            records.sort(key=lambda x: x['submitTime'])
             all_records.extend(records)
 
             # 显示进度
             print(f"已获取第 {page} 页，共 {len(records)} 条记录")
 
             # 如果已经获取到足够数量的记录
-            if len(all_records) >= count:
+            if len(all_records) >= total_needed:
                 break
 
-            # 避免请求过于频繁
-            time.sleep(0.5)
+            page += 1  # 获取下一页
+            time.sleep(0.5)  # 避免请求过于频繁
 
         # 按时间升序排序（越早的记录越靠前）
         all_records.sort(key=lambda x: x['submitTime'])
 
-        # 确保不超过请求的数量
-        return all_records[:min(count, len(all_records))]
+        # 确保不超过请求的数量（取最新的count条）
+        return all_records[-min(total_needed, len(all_records)):]
     except Exception as e:
         print(f"获取数据失败: {str(e)}")
         return []
@@ -207,8 +211,8 @@ def create_csv(records, filename):
 def main():
     banner = f"""
                 ██╗     ██╗   ██╗ ██████╗  ██████╗ ██╗   ██╗
-                ██║     ██║   ██║██╔════╝ ██╔═══██╗██║   ██║
-                ██║     ██║   ██║██║  ███╗██║   ██║██║   ██║
+                ██║     ██║   ██║██╔═══██╗██╔════╝ ██║   ██║
+                ██║     ██║   ██║██║   ██║██║  ███╗██║   ██║
                 ██║     ██║   ██║██║   ██║██║   ██║██║   ██║  
                 ███████╗╚██████╔╝╚██████╔╝╚██████╔╝╚██████╔╝
                 ╚══════╝ ╚═════╝  ╚═════╝  ╚═════╝  ╚═════╝
@@ -220,8 +224,9 @@ def main():
                 ╚═════╝  ╚═════╝ ╚══════╝
             """
     print(banner)
-    print("洛谷做题日记生成器 v3.7")
+    print("洛谷做题日记生成器 v3.8")
     print("=" * 60)
+    print("优化记录获取逻辑：确保获取最新提交并按时间升序排列")
     print("支持多页抓取，最多可获取1000条提交记录（避免频繁请求被Ban）")
     print("=" * 60)
 
@@ -250,7 +255,7 @@ def main():
         sys.exit(1)
 
     # 获取提交记录
-    print(f"\n正在获取用户 {luogu_uid} 的 {count} 条提交记录...")
+    print(f"\n正在获取用户 {luogu_uid} 的最新 {count} 条提交记录...")
     records = fetch_luogu_submissions(luogu_uid, client_id, count)
 
     if not records:
@@ -264,6 +269,10 @@ def main():
         print(f"⚠️ 注意: 只获取到 {actual_count} 条记录（请求数量: {count}）")
     else:
         print(f"✅ 成功获取 {actual_count} 条提交记录")
+        # 显示时间范围
+        first_submit = datetime.fromtimestamp(records[0]['submitTime']).strftime("%Y-%m-%d %H:%M")
+        last_submit = datetime.fromtimestamp(records[-1]['submitTime']).strftime("%Y-%m-%d %H:%M")
+        print(f"📅 时间范围: {first_submit} 至 {last_submit}")
 
     # 生成文件名
     timestamp = time.strftime('%Y%m%d_%H%M%S')
@@ -276,13 +285,11 @@ def main():
     # 使用提示
     print("\n使用说明:")
     print(f"1. Excel文件 ({base_filename}.xlsx):")
-    print("   - 美观的格式化表格")
-    print("   - 状态自动着色")
-    print("   - 适合直接查看和编辑")
+    print("   - 表格按提交时间升序排列（最早的在最上面）")
+    print("   - 美观的格式化表格，状态自动着色")
     print(f"2. CSV文件 ({base_filename}.csv):")
-    print("   - 纯文本格式")
-    print("   - 适合程序处理或导入数据库")
-    print(f"3. 包含 {actual_count} 条记录，按提交时间升序排列")
+    print("   - 纯文本格式，适合程序处理")
+    print(f"3. 包含 {actual_count} 条记录，时间从 {first_submit} 到 {last_submit}")
     print("\n提示：避免频繁请求大量数据，以防被洛谷封禁！")
 
 
