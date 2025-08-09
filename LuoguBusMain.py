@@ -62,7 +62,7 @@ def fetch_luogu_submissions(luogu_uid, client_id, count=50):
                 break
 
             page += 1  # 获取下一页
-            time.sleep(0.5)  # 避免请求过于频繁
+            time.sleep(0.2)
 
         # 按时间升序排序（越早的记录越靠前）
         all_records.sort(key=lambda x: x['submitTime'])
@@ -75,7 +75,6 @@ def fetch_luogu_submissions(luogu_uid, client_id, count=50):
 
 
 def create_excel(records, filename):
-    """创建美观的Excel文件，状态颜色与洛谷官网一致"""
     wb = Workbook()
     ws = wb.active
     ws.title = "刷题记录"
@@ -112,14 +111,14 @@ def create_excel(records, filename):
     data_alignment = Alignment(horizontal="left", vertical="center", wrap_text=True)
 
     status_colors = {
-        "AC": "52C41A",
-        "WA": "E74C3C",
-        "TLE": "F39C11",
-        "MLE": "9B59B6",
-        "RE": "A71D5D",
-        "CE": "000000",
-        "UnAccept": "1ABC9C",
-        "UKE": "ADADAD"
+        "AC": "32CD32",
+        "WA": "FF0000",
+        "TLE": "191970",
+        "MLE": "191970",
+        "RE": "A020F0",
+        "CE": "DAA520",
+        "UnAccept": "FF0000",
+        "UKE": "191970"
     }
 
     status_mapping = {
@@ -141,7 +140,6 @@ def create_excel(records, filename):
         submit_time = datetime.fromtimestamp(record['submitTime'])
         problem = record.get('problem', {})
 
-        # 状态处理 - 使用修正后的状态映射
         status_code = record.get('status', 0)
         status = status_mapping.get(status_code, f"未知({status_code})")
 
@@ -155,27 +153,22 @@ def create_excel(records, filename):
         ]
         ws.append(row)
 
-        # 应用数据样式
         last_row = ws.max_row
         for col in range(1, 7):  # 共6列
             cell = ws.cell(row=last_row, column=col)
             cell.alignment = data_alignment
             cell.border = thin_border
 
-            # 状态列着色（第4列） - 使用洛谷官网颜色
             if col == 4 and status in status_colors:
                 cell.fill = PatternFill(
                     start_color=status_colors[status],
                     end_color=status_colors[status],
                     fill_type="solid"
                 )
-                # 所有状态使用白色字体（与洛谷官网一致）
                 cell.font = Font(color="FFFFFF")
 
-    # 冻结首行
     ws.freeze_panes = "A2"
 
-    # 保存文件
     wb.save(filename)
     print(f"✓ 已生成Excel文件: {filename}")
 
@@ -185,12 +178,10 @@ def create_csv(records, filename):
     if not records:
         return
 
-    # 准备表头
     fieldnames = [
         "submit_time", "problem_id", "problem_name", "status", "run_time", "memory_usage"
     ]
 
-    # 状态映射（与Excel一致）
     status_mapping = {
         12: "AC",
         7: "WA",
@@ -211,7 +202,6 @@ def create_csv(records, filename):
         submit_time = datetime.fromtimestamp(record['submitTime'])
         problem = record.get('problem', {})
 
-        # 使用修正后的状态映射
         status_code = record.get('status', 0)
         status = status_mapping.get(status_code, f"Unknown({status_code})")
 
@@ -249,13 +239,11 @@ def main():
                 ╚═════╝  ╚═════╝ ╚══════╝
             """
     print(banner)
-    print("洛谷做题日记生成器 v3.9")
+    print("洛谷做题日记生成器 v3.9.5")
 
-    # 获取必要信息
     client_id = input("请输入__client_id的值: ").strip()
     luogu_uid = input("请输入_uid的值: ").strip()
 
-    # 询问记录数量（最大1000）
     while True:
         try:
             count_input = input("请输入要获取的记录数量 (1-1000, 默认50): ").strip()
@@ -264,10 +252,10 @@ def main():
                 break
 
             count = int(count_input)
-            if 1 <= count <= 1000:
+            if 1 <= count <= 2000:
                 break
             else:
-                print("请输入1到1000之间的整数！")
+                print("请输入1到2000之间的整数！")
         except ValueError:
             print("请输入有效的整数！")
 
@@ -311,7 +299,7 @@ def main():
     print(f"2. CSV文件 ({base_filename}.csv):")
     print("   - 纯文本格式，适合程序处理")
     print(f"3. 包含 {actual_count} 条记录，时间从 {first_submit} 到 {last_submit}")
-    print("\n提示：避免频繁请求大量数据，以防被洛谷封禁！")
+    print("\n提示：避免频繁请求大量数据，以防被洛谷IPBan！")
 
 
 if __name__ == "__main__":
